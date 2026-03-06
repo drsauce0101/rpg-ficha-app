@@ -216,6 +216,7 @@ def deletar_personagem(request: Request, char_id: int, session: Session = Depend
 
 @app.post("/api/atualizar_campo/{char_id}")
 async def api_atualizar_campo(
+    request: Request,
     char_id: int, 
     data: dict = Body(...), 
     session: Session = Depends(get_session)
@@ -231,7 +232,14 @@ async def api_atualizar_campo(
     try:
         for campo, valor in data.items():
             # Converte números se necessário
-            if campo in ['nivel', 'pv_max', 'pv_atual', 'pa_max', 'pa_atual', 'defesa', 'fisico', 'presenca', 'carisma', 'astucia', 'bonus_fisico', 'bonus_presenca', 'bonus_carisma', 'bonus_astucia']:
+            int_fields = [
+                'nivel', 'pv_max', 'pv_atual', 'pa_max', 'pa_atual', 'defesa', 
+                'fisico', 'presenca', 'carisma', 'astucia', 
+                'bonus_fisico', 'bonus_presenca', 'bonus_carisma', 'bonus_astucia',
+                'fisico_exp', 'fisico_inc', 'presenca_exp', 'presenca_inc',
+                'carisma_exp', 'carisma_inc', 'astucia_exp', 'astucia_inc'
+            ]
+            if campo in int_fields:
                 valor = safe_int(valor)
             
             if hasattr(personagem, campo):
