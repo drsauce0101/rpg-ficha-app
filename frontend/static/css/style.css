@@ -46,6 +46,34 @@ body::before {
     filter: blur(5px) brightness(0.25) sepia(0.4);
     /* Fundo escuro, rústico e focado */
     transform: scale(1.1);
+    animation: bgSlideshow 240s infinite;
+}
+
+@keyframes bgSlideshow {
+
+    0%,
+    24.99% {
+        background-image: url('/static/img/medieval-background.jpg');
+    }
+
+    25%,
+    49.99% {
+        background-image: url('/static/img/medieval-background2.jpg');
+    }
+
+    50%,
+    74.99% {
+        background-image: url('/static/img/medieval-background3.jpg');
+    }
+
+    75%,
+    99.99% {
+        background-image: url('/static/img/medieval-background4.jpg');
+    }
+
+    100% {
+        background-image: url('/static/img/medieval-background.jpg');
+    }
 }
 
 h1,
