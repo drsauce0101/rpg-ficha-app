@@ -43,7 +43,27 @@ async def lifespan(app: FastAPI):
         pass
     yield
 
+from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi.middleware.cors import CORSMiddleware
+
+class ProxySchemeMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        # Se o ngrok (ou outro proxy) roteou isso via HTTPS, forçamos o FastAPI a reconhecer como HTTPS
+        if request.headers.get("x-forwarded-proto") == "https":
+            request.scope["scheme"] = "https"
+        return await call_next(request)
+
 app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(ProxySchemeMiddleware)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Configurações de Caminhos
 BASE_DIR = Path(__file__).resolve().parent.parent 
