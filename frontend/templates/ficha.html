@@ -6,10 +6,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ ficha.nome }} - Giharad</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link href="{{ url_for('static', path='css/style.css') }}?v=60" rel="stylesheet">
+    <link href="/static/css/style.css?v=61" rel="stylesheet">
     <script>
-        const bgDelays = [0, -60, -120, -180];
-        document.documentElement.style.setProperty('--bg-delay', bgDelays[Math.floor(Math.random() * bgDelays.length)] + 's');
+        document.addEventListener('DOMContentLoaded', () => {
+            const bgImages = ['medieval-background.jpg', 'medieval-background2.jpg', 'medieval-background3.jpg', 'medieval-background4.jpg'];
+            const container = document.createElement('div');
+            container.id = 'bg-slideshow-container';
+
+            let currentIndex = Math.floor(Math.random() * bgImages.length);
+            const layers = [];
+
+            bgImages.forEach((img, i) => {
+                const layer = document.createElement('div');
+                layer.className = 'bg-slide-layer';
+                layer.style.backgroundImage = `url('/static/img/${img}')`;
+                layer.style.opacity = (i === currentIndex) ? '1' : '0';
+                container.appendChild(layer);
+                layers.push(layer);
+            });
+            document.body.prepend(container);
+
+            setInterval(() => {
+                const nextIndex = (currentIndex + 1) % layers.length;
+                layers[currentIndex].style.opacity = '0';
+                layers[nextIndex].style.opacity = '1';
+                currentIndex = nextIndex;
+            }, 60000); // 60s
+        });
     </script>
 </head>
 
