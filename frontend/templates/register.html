@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giharad RPG - Registro</title>
+    <link href="/static/css/style.css?v=61" rel="stylesheet">
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const bgImages = ['medieval-background.jpg', 'medieval-background2.jpg', 'medieval-background3.jpg', 'medieval-background4.jpg'];
+            const container = document.createElement('div');
+            container.id = 'bg-slideshow-container';
+
+            let currentIndex = Math.floor(Math.random() * bgImages.length);
+            const layers = [];
+
+            bgImages.forEach((img, i) => {
+                const layer = document.createElement('div');
+                layer.className = 'bg-slide-layer';
+                layer.style.backgroundImage = `url('/static/img/${img}')`;
+                layer.style.opacity = (i === currentIndex) ? '1' : '0';
+                container.appendChild(layer);
+                layers.push(layer);
+            });
+            document.body.prepend(container);
+
+            setInterval(() => {
+                const nextIndex = (currentIndex + 1) % layers.length;
+                layers[currentIndex].style.opacity = '0';
+                layers[nextIndex].style.opacity = '1';
+                currentIndex = nextIndex;
+            }, 60000); // 60s
+        });
+    </script>
+</head>
+
+<body>
+    <div class="container" style="max-width: 500px; margin-top: 100px;">
+        <div class="hub-header" style="text-align: center;">
+            <h1 style="margin: 0; border: none; font-size: 2.2em; width: 100%;">Registro</h1>
+            <span style="color: var(--gold-dim); font-family: 'Cinzel', serif;">Forje sua aliança</span>
+        </div>
+
+        <form action="/register" method="post"
+            style="background: rgba(0,0,0,0.5); padding: 30px; border: 1px solid var(--panel-border); border-radius: 4px; box-shadow: 0 0 20px rgba(0,0,0,0.8);">
+            {% if error %}
+            <div
+                style="color: #ff5252; background: rgba(255,82,82,0.1); padding: 10px; margin-bottom: 15px; text-align: center; border: 1px solid #ff5252; font-family: 'Cinzel';">
+                {{ error }}</div>
+            {% endif %}
+
+            <div style="margin-bottom: 15px;">
+                <label
+                    style="display: block; color: var(--gold-dim); font-family: 'Cinzel', serif; margin-bottom: 5px;">Usuário</label>
+                <input type="text" name="username" class="input-transparent w-100"
+                    style="background: rgba(0,0,0,0.4); padding: 10px; box-sizing: border-box; border-bottom: 2px solid var(--gold-dim);"
+                    required>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label
+                    style="display: block; color: var(--gold-dim); font-family: 'Cinzel', serif; margin-bottom: 5px;">Senha</label>
+                <input type="password" name="password" class="input-transparent w-100"
+                    style="background: rgba(0,0,0,0.4); padding: 10px; box-sizing: border-box; border-bottom: 2px solid var(--gold-dim);"
+                    required>
+            </div>
+
+            <div style="margin-bottom: 30px;">
+                <label
+                    style="display: block; color: var(--gold-dim); font-family: 'Cinzel', serif; margin-bottom: 5px;">Confirmar
+                    Senha</label>
+                <input type="password" name="confirm_password" class="input-transparent w-100"
+                    style="background: rgba(0,0,0,0.4); padding: 10px; box-sizing: border-box; border-bottom: 2px solid var(--gold-dim);"
+                    required>
+            </div>
+
+            <div style="text-align: center;">
+                <button type="submit" class="btn-novo bg-333"
+                    style="padding: 12px 60px; font-size: 1.1em; cursor: pointer; color: var(--gold-main);">REGISTRAR</button>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <span style="color: #666; font-size: 0.9em;">Já é um veterano?</span><br>
+                <a href="/login"
+                    style="color: var(--gold-main); font-family: 'Cinzel', serif; text-decoration: none; font-weight: bold;">Voltar
+                    para Login</a>
+            </div>
+        </form>
+    </div>
+</body>
+
+</html>
