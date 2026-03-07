@@ -40,56 +40,79 @@
 
     <div class="container container-ficha layout-main-flex">
 
-        <div class="character-sidebar">
-            <div class="avatar-upload-box" onclick="document.getElementById('avatar-upload').click()">
-                <span class="material-icons"
-                    style="font-size: 4em; color: var(--gold-dim); z-index: 1;">account_circle</span>
-                <span
-                    style="font-family: 'Cinzel', serif; font-size: 0.9em; color: var(--gold-dim); margin-top: 10px; z-index: 1;">Alterar
-                    Imagem</span>
-                <img id="avatar-img" src="{{ ficha.avatar }}"
-                    style="{% if not ficha.avatar %}display: none;{% endif %}">
-            </div>
-            <input type="file" id="avatar-upload" accept="image/*" style="display: none;"
-                onchange="handleAvatarUpload(event)">
-        </div>
-
         <div class="character-main">
 
-            <div class="ficha-header-flex">
-                <div class="flex-grow-1">
-                    <h1 class="ficha-title">
-                        <input type="text" class="input-transparent" value="{{ ficha.nome }}"
-                            onblur="salvar('nome', this.value)">
-                    </h1>
-                    <div class="ficha-subtitle-flex">
-                        <input type="text" class="input-transparent w-auto" style="min-width: 100px;"
-                            value="{{ ficha.raca }}" onblur="salvar('raca', this.value)">
-                        <select class="input-transparent w-auto"
-                            style="min-width: 100px; -webkit-appearance: none; appearance: none; cursor: pointer;"
-                            onchange="salvar('classe', this.value)" id="select-classe">
-                            <option value="">(Sem Classe)</option>
-                            <option value="Combatente" {% if ficha.classe=='Combatente' %}selected{% endif %}>Combatente
-                            </option>
-                            <option value="Mentor" {% if ficha.classe=='Mentor' %}selected{% endif %}>Mentor</option>
-                            <option value="Conjurador" {% if ficha.classe=='Conjurador' %}selected{% endif %}>Conjurador
-                            </option>
-                            <option value="Zelote" {% if ficha.classe=='Zelote' %}selected{% endif %}>Zelote</option>
-                        </select>
-                        | Nível
-                        <input type="number" class="input-transparent w-40 text-center" value="{{ ficha.nivel }}"
-                            onblur="salvar('nivel', this.value)">
+            <!-- Ficha Header with Left Avatar, Center Info, and Right Level Circle -->
+            <div class="ficha-header-flex"
+                style="display: flex; gap: 30px; align-items: center; justify-content: space-between; position: relative;">
+
+                <!-- Left: Avatar -->
+                <div class="avatar-upload-box" onclick="document.getElementById('avatar-upload').click()"
+                    style="margin: 0; flex-shrink: 0; width: 140px; height: 140px;">
+                    <span class="material-icons"
+                        style="font-size: 4em; color: var(--gold-dim); z-index: 1;">account_circle</span>
+                    <span
+                        style="font-family: 'Cinzel', serif; font-size: 0.8em; color: var(--gold-dim); margin-top: 5px; z-index: 1; text-align: center;">Alterar
+                        Imagem</span>
+                    <img id="avatar-img" src="{{ ficha.avatar }}"
+                        style="width: 100%; height: 100%; object-fit: cover; border-radius: 0; {% if not ficha.avatar %}display: none;{% endif %}">
+                </div>
+                <input type="file" id="avatar-upload" accept="image/*" style="display: none;"
+                    onchange="handleAvatarUpload(event)">
+
+                <!-- Center: Name, Subtitle and Buttons -->
+                <div class="flex-grow-1" style="display: flex; flex-direction: column; gap: 15px;">
+                    <div>
+                        <h1 class="ficha-title" style="margin-bottom: 5px; text-align: left;">
+                            <input type="text" class="input-transparent" value="{{ ficha.nome }}"
+                                onblur="salvar('nome', this.value)" style="text-align: left;">
+                        </h1>
+                        <div class="ficha-subtitle-flex" style="justify-content: flex-start; align-items: baseline;">
+                            <input type="text" class="input-transparent w-auto"
+                                style="min-width: 100px; text-align: left;" value="{{ ficha.raca }}"
+                                onblur="salvar('raca', this.value)">
+                            <span
+                                style="color: #ccc; margin-left: 10px; font-family: 'Cinzel', serif; font-size: 0.8rem; letter-spacing: 1px;">CLASSE:
+                            </span>
+                            <select class="input-transparent w-auto"
+                                style="min-width: 100px; -webkit-appearance: none; appearance: none; cursor: pointer; padding-bottom: 0px;"
+                                onchange="salvar('classe', this.value)" id="select-classe">
+                                <option value="">(Sem Classe)</option>
+                                <option value="Combatente" {% if ficha.classe=='Combatente' %}selected{% endif %}>
+                                    Combatente</option>
+                                <option value="Mentor" {% if ficha.classe=='Mentor' %}selected{% endif %}>Mentor
+                                </option>
+                                <option value="Conjurador" {% if ficha.classe=='Conjurador' %}selected{% endif %}>
+                                    Conjurador</option>
+                                <option value="Zelote" {% if ficha.classe=='Zelote' %}selected{% endif %}>Zelote
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- BUTTONS -->
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button class="btn-novo bg-333"
+                            style="color: #4caf50 !important; border-color: #388e3c !important;"
+                            onclick="levelUpFicha()">EVOLUIR</button>
+                        <button class="btn-novo bg-333"
+                            style="color: #f57f17 !important; border-color: #fbc02d !important;"
+                            onclick="recalcularAtributos()">ATUALIZAR</button>
+                        <button class="btn-novo bg-333"
+                            style="color: #2196f3 !important; border-color: #1976d2 !important;"
+                            onclick="abrirModalDescanso('{{ ficha.descansos_curtos | default(0) }}')">DESCANSO</button>
+                        <a href="/" class="btn-novo bg-333">VOLTAR</a>
                     </div>
                 </div>
-                <!-- BUTTONS -->
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <button class="btn-novo bg-333" style="color: #4caf50 !important; border-color: #388e3c !important;"
-                        onclick="levelUpFicha()">EVOLUIR
-                    </button>
-                    <button class="btn-novo bg-333" style="color: #f57f17 !important; border-color: #fbc02d !important;"
-                        onclick="recalcularAtributos()">ATUALIZAR
-                    </button>
-                    <a href="/" class="btn-novo bg-333">VOLTAR</a>
+
+                <!-- Right: Level Circle -->
+                <div
+                    style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 90px; height: 90px; border: 2px solid var(--gold); border-radius: 50%; background: rgba(0,0,0,0.6); flex-shrink: 0; box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);">
+                    <span
+                        style="font-size: 0.7rem; color: var(--gold); font-family: 'Cinzel', serif; letter-spacing: 2px; margin-top: 8px;">NÍVEL</span>
+                    <input type="number" id="nivel_input" class="input-transparent text-center font-bold"
+                        value="{{ ficha.nivel }}" onblur="salvar('nivel', this.value)"
+                        style="font-size: 2.2rem; color: #fff; width: 70px; margin-top: -5px; padding: 0;">
                 </div>
             </div>
 
@@ -120,28 +143,28 @@
                             style="display: flex; align-items: center; justify-content: space-between;">
                             <span>Vida</span>
                             <strong style="width: auto !important; gap: 8px;">
-                                <input type="number" class="input-transparent w-35 text-right"
+                                <input type="number" id="pv_atual_input" class="input-transparent w-35 text-right"
                                     value="{{ ficha.pv_atual }}" onblur="salvar('pv_atual', this.value)"> /
                                 <input type="number" class="input-transparent w-35 text-center editable-stat"
                                     value="{{ ficha.pv_max }}" id="pv_max_input" onblur="salvar('pv_max', this.value)"
                                     readonly> +
-                                <input type="number" class="input-transparent w-35 text-left" style="color: #4caf50;"
-                                    value="{{ ficha.pv_bonus }}" onblur="salvar('pv_bonus', this.value)"
-                                    title="Bônus Temporário">
+                                <input type="number" id="pv_bonus_input" class="input-transparent w-35 text-left"
+                                    style="color: #4caf50;" value="{{ ficha.pv_bonus }}"
+                                    onblur="salvar('pv_bonus', this.value)" title="Bônus Temporário">
                             </strong>
                         </div>
                         <div class="bar-box pa"
                             style="display: flex; align-items: center; justify-content: space-between;">
                             <span>Ação</span>
                             <strong style="width: auto !important; gap: 8px;">
-                                <input type="number" class="input-transparent w-35 text-right"
+                                <input type="number" id="pa_atual_input" class="input-transparent w-35 text-right"
                                     value="{{ ficha.pa_atual }}" onblur="salvar('pa_atual', this.value)"> /
                                 <input type="number" class="input-transparent w-35 text-center editable-stat"
                                     value="{{ ficha.pa_max }}" id="pa_max_input" onblur="salvar('pa_max', this.value)"
                                     readonly> +
-                                <input type="number" class="input-transparent w-35 text-left" style="color: #4caf50;"
-                                    value="{{ ficha.pa_bonus }}" onblur="salvar('pa_bonus', this.value)"
-                                    title="Bônus Temporário">
+                                <input type="number" id="pa_bonus_input" class="input-transparent w-35 text-left"
+                                    style="color: #4caf50;" value="{{ ficha.pa_bonus }}"
+                                    onblur="salvar('pa_bonus', this.value)" title="Bônus Temporário">
                             </strong>
                         </div>
                         <div class="bar-box ph"
@@ -153,9 +176,9 @@
                                 <input type="number" class="input-transparent w-35 text-center editable-stat"
                                     value="{{ ficha.ph_max }}" id="ph_max_input" onblur="salvar('ph_max', this.value)"
                                     readonly> +
-                                <input type="number" class="input-transparent w-35 text-left" style="color: #4caf50;"
-                                    value="{{ ficha.ph_bonus }}" onblur="salvar('ph_bonus', this.value)"
-                                    title="Bônus Temporário">
+                                <input type="number" id="ph_bonus_input" class="input-transparent w-35 text-left"
+                                    style="color: #4caf50;" value="{{ ficha.ph_bonus }}"
+                                    onblur="salvar('ph_bonus', this.value)" title="Bônus Temporário">
                             </strong>
                         </div>
                         <div class="bar-box pg"
@@ -167,9 +190,9 @@
                                 <input type="number" class="input-transparent w-35 text-center editable-stat"
                                     value="{{ ficha.pg_max }}" id="pg_max_input" onblur="salvar('pg_max', this.value)"
                                     readonly> +
-                                <input type="number" class="input-transparent w-35 text-left" style="color: #4caf50;"
-                                    value="{{ ficha.pg_bonus }}" onblur="salvar('pg_bonus', this.value)"
-                                    title="Bônus Temporário">
+                                <input type="number" id="pg_bonus_input" class="input-transparent w-35 text-left"
+                                    style="color: #4caf50;" value="{{ ficha.pg_bonus }}"
+                                    onblur="salvar('pg_bonus', this.value)" title="Bônus Temporário">
                             </strong>
                         </div>
                         <div class="bar-box bar-box-defesa"><span class="defesa-label">DEFESA <input type="number"
@@ -219,8 +242,8 @@
                                     {{ draw_svg(valor) }}
                                 </svg>
                                 <span class="dice-label">{{ valor }}</span>
-                                <select class="dice-select-hidden"
-                                    onchange="salvar('{{ field }}', this.value).then(() => location.reload())">
+                                <select class="dice-select-hidden" data-old-value="{{ valor }}"
+                                    onchange="if ('{{ field }}' === 'fisico') { mudarFisico(this); } else { salvar('{{ field }}', this.value).then(() => location.reload()); }">
                                     {% for faces in [4, 6, 8, 10, 12, 20] %}
                                     <option value="{{ faces }}" {{ 'selected' if valor==faces else '' }}>d{{ faces }}
                                     </option>
@@ -391,10 +414,19 @@
                     <h3 class="section-title">Círculos</h3>
                     <div class="stats-grid grid-3">
                         {% for i in range(1, 7) %}
-                        <div class="stat-box"><span class="stat-label">{{ i }}º</span><span class="stat-value"><input
-                                    type="number" class="input-transparent text-center"
-                                    value="{{ ficha|attr('slots_nv' ~ i) }}"
-                                    onblur="salvar('slots_nv{{ i }}', this.value)"></span></div>
+                        <div class="stat-box">
+                            <span class="stat-label">{{ i }}º</span>
+                            <span class="stat-value"
+                                style="display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 1rem;">
+                                <input type="number" id="slots_nv{{ i }}_input"
+                                    class="input-transparent w-40 text-right" value="{{ ficha|attr('slots_nv' ~ i) }}"
+                                    onblur="salvar('slots_nv{{ i }}', this.value)"> /
+                                <input type="number" id="slots_nv{{ i }}_max_input"
+                                    class="input-transparent w-40 text-left editable-stat"
+                                    value="{{ ficha|attr('slots_nv' ~ i ~ '_max')|default(0) }}"
+                                    onblur="salvar('slots_nv{{ i }}_max', this.value)" readonly>
+                            </span>
+                        </div>
                         {% endfor %}
                     </div>
                 </div>
@@ -428,19 +460,44 @@
         </div>
 
         <div id="Inventario" class="tabcontent">
-            <h3 class="section-title">Mochila</h3>
+            <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 15px;">
+                <h3 class="section-title" style="margin-bottom: 5px;">Mochila</h3>
+                <span id="peso-label" style="font-size: 0.8em; font-family: 'Cinzel', serif; color: #ccc;">Peso: 0 /
+                    10</span>
+            </div>
+
+            <div
+                style="width: 100%; height: 8px; background: rgba(0,0,0,0.5); border: 1px solid #444; border-radius: 4px; overflow: hidden; margin-bottom: 15px;">
+                <div id="peso-bar"
+                    style="height: 100%; width: 0%; transition: width 0.3s, background 0.3s; background: #4caf50;">
+                </div>
+            </div>
             <div id="lista-inventario" class="inv-panel">
                 {% for item in ficha.inventario %}
                 <div class="card-container item-row inv-card">
                     <span class="flex-grow-1">
                         <input type="text" class="input-transparent d-inline w-auto" name="nome" value="{{ item.nome }}"
                             placeholder="Nome do Item" onblur="salvarLista('inventario')">
-                        (x<input type="text" class="input-transparent d-inline w-25 text-center" name="qtd"
-                            value="{{ item.qtd }}" onblur="salvarLista('inventario')">)
+                        (x<input type="text" class="input-transparent d-inline w-25 text-center peso-calc" name="qtd"
+                            value="{{ item.qtd }}" onblur="salvarLista('inventario'); calcularPeso()">)
                     </span>
-                    <span class="inv-slot-wrap">Espaços: <input type="text"
-                            class="input-transparent d-inline w-25 text-center" name="espacos"
-                            value="{{ item.espacos }}" onblur="salvarLista('inventario')"></span>
+                    <span class="inv-slot-wrap" style="display: flex; gap: 8px; align-items: center;">
+                        <span title="Empunhado" style="display: flex; align-items: center; gap: 2px;">
+                            <span class="material-icons"
+                                style="font-size: 1.1em; color: var(--gold-dim);">front_hand</span>
+                            <input type="checkbox" name="empunhado" {% if item.empunhado %}checked{% endif %}
+                                onchange="salvarLista('inventario')">
+                        </span>
+                        <span title="Vestido" style="display: flex; align-items: center; gap: 2px;">
+                            <span class="material-icons"
+                                style="font-size: 1.1em; color: var(--gold-dim);">checkroom</span>
+                            <input type="checkbox" name="vestido" {% if item.vestido %}checked{% endif %}
+                                onchange="salvarLista('inventario')">
+                        </span>
+                        <span>Espaços: <input type="text" class="input-transparent d-inline w-25 text-center peso-calc"
+                                name="espacos" value="{{ item.espacos }}"
+                                onblur="salvarLista('inventario'); calcularPeso()"></span>
+                    </span>
                     <button class="btn-delete-item" onclick="removerItem(this, 'inventario')"><span
                             class="material-icons">delete</span></button>
                 </div>
@@ -545,7 +602,7 @@
                 else if (classe === "Zelote") { pvGains = 5; paGains = 4; }
 
                 // current values
-                const nivelAtual = parseInt(document.querySelector('input[onblur="salvar(\\\'nivel\\\', this.value)"]').value) || 1;
+                const nivelAtual = parseInt(document.getElementById('nivel_input').value) || 1;
                 const novoNivel = nivelAtual + 1;
 
                 const pvMaxAtual = parseInt(document.getElementById('pv_max_input').value) || 0;
@@ -555,14 +612,28 @@
                 const novoPaMax = paMaxAtual + paGains;
                 const novoPgPhMax = novoNivel * 2;
 
+                const magSlots = getMaxEspacosMagia(classe, novoNivel);
+
                 const payload = {
                     nivel: novoNivel,
                     pv_max: novoPvMax,
-                    pv_atual: parseInt(document.querySelector('input[onblur="salvar(\\\'pv_atual\\\', this.value)"]').value) + pvGains, // opcional dar a vida ao upar
+                    pv_atual: parseInt(document.getElementById('pv_atual_input').value) + pvGains, // opcional dar a vida ao upar
                     pa_max: novoPaMax,
-                    pa_atual: parseInt(document.querySelector('input[onblur="salvar(\\\'pa_atual\\\', this.value)"]').value) + paGains,
+                    pa_atual: parseInt(document.getElementById('pa_atual_input').value) + paGains,
                     pg_max: novoPgPhMax,
-                    ph_max: novoPgPhMax
+                    ph_max: novoPgPhMax,
+
+                    slots_nv1_max: magSlots[0],
+
+                    slots_nv2_max: magSlots[1],
+
+                    slots_nv3_max: magSlots[2],
+
+                    slots_nv4_max: magSlots[3],
+
+                    slots_nv5_max: magSlots[4],
+
+                    slots_nv6_max: magSlots[5]
                 };
 
                 salvarMultiplos(payload).then(() => {
@@ -574,8 +645,7 @@
         function recalcularAtributos() {
             const selectClasse = document.getElementById('select-classe');
             const classe = selectClasse.value;
-            const nivelObj = document.querySelector('input[onblur="salvar(\\\'nivel\\\', this.value)"]');
-            const nivelAtual = parseInt(nivelObj ? nivelObj.value : 1) || 1;
+            const nivelAtual = parseInt(document.getElementById('nivel_input').value) || 1;
 
             if (!classe || classe === "Classe" || classe === "(Sem Classe)") {
                 showConfirmModal("Você precisa escolher uma Classe para recalcular os atributos!", null);
@@ -596,20 +666,26 @@
                 else if (classe === "Conjurador") { pvBase = 4; paBase = 3; pvGains = 4; paGains = 3; }
                 else if (classe === "Zelote") { pvBase = 5; paBase = 4; pvGains = 5; paGains = 4; }
 
-                // Fórmula: Base no lvl 1 + (Ganhos * Níveis Adicionais)
-                const totalPvMax = pvBase + (pvGains * (nivelAtual - 1));
+                // Fórmula: Base no lvl 1 + (Ganhos * Níveis Adicionais) + Bônus de Passos Físico
+                const pFis = parseInt('{{ ficha.fisico | default(4) }}');
+                const passosFis = getPassosFisico(pFis);
+                const totalPvMax = pvBase + (pvGains * (nivelAtual - 1)) + passosFis;
                 const totalPaMax = paBase + (paGains * (nivelAtual - 1));
                 const totalPgPhMax = nivelAtual * 2;
 
+                const magSlots = getMaxEspacosMagia(classe, nivelAtual);
+
                 const payload = {
                     pv_max: totalPvMax,
-                    pv_atual: totalPvMax,
                     pa_max: totalPaMax,
-                    pa_atual: totalPaMax,
                     pg_max: totalPgPhMax,
-                    pg_atual: totalPgPhMax,
                     ph_max: totalPgPhMax,
-                    ph_atual: totalPgPhMax
+                    slots_nv1_max: magSlots[0],
+                    slots_nv2_max: magSlots[1],
+                    slots_nv3_max: magSlots[2],
+                    slots_nv4_max: magSlots[3],
+                    slots_nv5_max: magSlots[4],
+                    slots_nv6_max: magSlots[5]
                 };
 
                 salvarMultiplos(payload).then(() => {
@@ -618,14 +694,179 @@
             });
         }
 
+        function abrirModalDescanso(descansosCurtosStr) {
+            const selectClasse = document.getElementById('select-classe');
+            const classe = selectClasse.value;
+
+            if (!classe || classe === "Classe" || classe === "(Sem Classe)") {
+                showConfirmModal("Você precisa de uma Classe para fazer um descanso!", null);
+                const bs = document.querySelectorAll('.custom-modal-btn.confirm');
+                if (bs.length > 0) bs[bs.length - 1].style.display = 'none';
+                return;
+            }
+
+            // Garante q vira número corretamente (se default for null/vazio/str)
+            const descansosCurtosInt = parseInt(descansosCurtosStr) || 0;
+
+            const overlay = document.createElement('div');
+            overlay.className = 'custom-modal-overlay';
+            const box = document.createElement('div');
+            box.className = 'custom-modal-box';
+
+            let buttonsHtml = '';
+
+            // Lógica do Descanso Curto (bloquear se >= 2)
+            if (descansosCurtosInt < 2) {
+                buttonsHtml += `<button class="custom-modal-btn confirm" style="background: #2196f3; color: white; width:100%; margin-bottom: 10px;" id="btnDescansoCurto">Descanso Curto</button>`;
+            } else {
+                buttonsHtml += `<button class="custom-modal-btn" style="background: #555; color: #888; width:100%; margin-bottom: 10px; cursor: not-allowed;" title="Limite de descansos curtos atingido" disabled>Descanso Curto (Esgotado)</button>`;
+            }
+
+            buttonsHtml += `
+                <button class="custom-modal-btn confirm" style="background: #9c27b0; color: white; width:100%; margin-bottom: 10px;" id="btnDescansoLongo">Descanso Longo</button>
+                <button class="custom-modal-btn cancel" style="width:100%;" onclick="this.closest('.custom-modal-overlay').remove()">Cancelar</button>
+            `;
+
+            box.innerHTML = `
+                <h3 style="color: var(--gold); margin-top: 0;">DESCANSO</h3>
+                <p style="color: #ccc; margin-bottom: 20px;">Escolha o tipo de descanso que seu grupo está fazendo. Um descanso longo irá restaurar parcialmente seus recursos baseado na qualidade do descanso, além de recuperar os espaços de magia.</p>
+                ${buttonsHtml}
+            `;
+
+            overlay.appendChild(box);
+            document.body.appendChild(overlay);
+
+            // Helpers to gather class gains and current values
+            const getGains = (cls) => {
+                if (cls === "Combatente") return { pv: 6, pa: 5 };
+                if (cls === "Mentor") return { pv: 4, pa: 6 };
+                if (cls === "Conjurador") return { pv: 4, pa: 3 };
+                if (cls === "Zelote") return { pv: 5, pa: 4 };
+                return { pv: 0, pa: 0 };
+            };
+
+            const level = parseInt(document.getElementById('nivel_input').value) || 1;
+            const pvMax = parseInt(document.getElementById('pv_max_input').value) || 0;
+            const paMax = parseInt(document.getElementById('pa_max_input').value) || 0;
+            const pvBonus = parseInt(document.getElementById('pv_bonus_input').value) || 0;
+            const paBonus = parseInt(document.getElementById('pa_bonus_input').value) || 0;
+            let pvAtual = parseInt(document.getElementById('pv_atual_input').value) || 0;
+            let paAtual = parseInt(document.getElementById('pa_atual_input').value) || 0;
+
+            const tetoPv = pvMax + pvBonus;
+            const tetoPa = paMax + paBonus;
+
+            const btnCurto = document.getElementById('btnDescansoCurto');
+            if (btnCurto) {
+                btnCurto.onclick = () => {
+                    const gains = getGains(classe);
+                    const pFis = parseInt('{{ ficha.fisico | default(4) }}');
+                    const pvGain = gains.pv + getPassosFisico(pFis);
+                    const paGain = gains.pa;
+
+                    const pAtualStr = document.getElementById('pv_atual_input').value;
+                    const pMaxStr = document.getElementById('pv_max_input').value;
+                    const pBonusStr = document.getElementById('pv_bonus_input').value || '0';
+
+                    const aAtualStr = document.getElementById('pa_atual_input').value;
+                    const aMaxStr = document.getElementById('pa_max_input').value;
+                    const aBonusStr = document.getElementById('pa_bonus_input').value || '0';
+
+                    const pvA = parseInt(pAtualStr) || 0;
+                    const pvM = (parseInt(pMaxStr) || 0) + (parseInt(pBonusStr) || 0);
+
+                    const paA = parseInt(aAtualStr) || 0;
+                    const paM = (parseInt(aMaxStr) || 0) + (parseInt(aBonusStr) || 0);
+
+                    const payload = {
+                        pv_atual: Math.min(pvA + pvGain, pvM),
+                        pa_atual: Math.min(paA + paGain, paM),
+                        descansos_curtos: descansosCurtosInt + 1
+                    };
+
+                    salvarMultiplos(payload).then(() => location.reload());
+                };
+            }
+
+            const btnLongo = document.getElementById('btnDescansoLongo');
+            if (btnLongo) {
+                btnLongo.onclick = () => {
+                    // Update main box view to Quality Selector
+                    box.innerHTML = `
+                        <h3 style="color: var(--gold); margin-top: 0;">QUALIDADE DO DESCANSO</h3>
+                        <p style="color: #ccc; margin-bottom: 20px;">Indique como foi a experiência de descanso da equipe, definindo quanta regeneração vocês receberão.</p>
+                        
+                        <button class="custom-modal-btn" style="background: #333; color: white; width:100%; margin-bottom: 5px; border: 1px solid #777;" id="qualRuim">Ruim (Apenas Metade do Máximo, +0 Bônus)</button>
+                        <button class="custom-modal-btn" style="background: #333; color: white; width:100%; margin-bottom: 5px; border: 1px solid #777;" id="qualNormal">Normal (+ Nível)</button>
+                        <button class="custom-modal-btn" style="background: #333; color: white; width:100%; margin-bottom: 5px; border: 1px solid #777;" id="qualConfortavel">Confortável (+ 2x Nível)</button>
+                        <button class="custom-modal-btn" style="background: #333; color: white; width:100%; margin-bottom: 10px; border: 1px solid #777;" id="qualLuxuoso">Luxuoso (Regeneração Completa)</button>
+
+                        <button class="custom-modal-btn cancel" style="width:100%;" onclick="this.closest('.custom-modal-overlay').remove()">Cancelar</button>
+                    `;
+
+                    const bindQuality = (id, extra) => {
+                        document.getElementById(id).onclick = () => {
+                            let newPv = pvAtual;
+                            let newPa = paAtual;
+                            const pFis = parseInt('{{ ficha.fisico | default(4) }}');
+                            const passosFis = getPassosFisico(pFis);
+
+                            if (extra === "FULL") {
+                                newPv = tetoPv;
+                                newPa = tetoPa;
+                            } else if (extra === "ZERO") {
+                                // Ruim não fornece nem metade da base nem bônus extra, fica com a Vida/Ação atual. Apenas magias resetam.
+                                newPv = pvAtual;
+                                newPa = paAtual;
+                            } else {
+                                newPv = Math.min(pvAtual + Math.floor(pvMax / 2) + extra + passosFis, tetoPv);
+                                newPa = Math.min(paAtual + Math.floor(paMax / 2) + extra, tetoPa);
+                            }
+
+                            // Recuperar magia é apenas voltar o _atual para o valor do _max
+                            const s1Max = parseInt(document.getElementById('slots_nv1_max_input').value) || 0;
+                            const s2Max = parseInt(document.getElementById('slots_nv2_max_input').value) || 0;
+                            const s3Max = parseInt(document.getElementById('slots_nv3_max_input').value) || 0;
+                            const s4Max = parseInt(document.getElementById('slots_nv4_max_input').value) || 0;
+                            const s5Max = parseInt(document.getElementById('slots_nv5_max_input').value) || 0;
+                            const s6Max = parseInt(document.getElementById('slots_nv6_max_input').value) || 0;
+
+                            const payload = {
+                                pv_atual: newPv,
+                                pa_atual: newPa,
+                                descansos_curtos: 0, // Reset
+                                slots_nv1: s1Max,
+                                slots_nv2: s2Max,
+                                slots_nv3: s3Max,
+                                slots_nv4: s4Max,
+                                slots_nv5: s5Max,
+                                slots_nv6: s6Max
+                            };
+
+                            salvarMultiplos(payload).then(() => location.reload());
+                        };
+                    };
+
+                    bindQuality('qualRuim', 0);
+                    bindQuality('qualNormal', level);
+                    bindQuality('qualConfortavel', level * 2);
+                    bindQuality('qualLuxuoso', "FULL");
+                };
+            }
+        }
+
         function salvarLista(tipo) {
             const container = document.getElementById(`lista-${tipo}`);
             const rows = container.querySelectorAll('.item-row');
             const data = [];
             rows.forEach(row => {
                 let obj = {};
-                row.querySelectorAll('input, textarea').forEach(input => {
-                    obj[input.name] = input.value;
+                row.querySelectorAll('input, select, textarea').forEach(input => {
+                    if (input.type === 'checkbox') {
+                        obj[input.name] = input.checked;
+                    } else {
+                        obj[input.name] = input.value;
+                    }
                 });
                 if (obj.nome) data.push(obj);
             });
@@ -670,6 +911,7 @@
             showConfirmModal("Deseja realmente remover este item?", () => {
                 btn.closest('.item-row').remove();
                 salvarLista(tipo);
+                if (tipo === 'inventario') calcularPeso();
             });
         }
 
@@ -730,9 +972,19 @@
             const html = `<div class="card-container item-row inv-card">
                 <span class="flex-grow-1">
                     <input type="text" class="input-transparent d-inline w-auto" name="nome" placeholder="Item" onblur="salvarLista('inventario')"> 
-                    (x<input type="text" class="input-transparent d-inline w-25 text-center" name="qtd" value="1" onblur="salvarLista('inventario')">)
+                    (x<input type="text" class="input-transparent d-inline w-25 text-center peso-calc" name="qtd" value="1" onblur="salvarLista('inventario'); calcularPeso()">)
                 </span>
-                <span class="inv-slot-wrap">Espaços: <input type="text" class="input-transparent d-inline w-25 text-center" name="espacos" value="0" onblur="salvarLista('inventario')"></span>
+                <span class="inv-slot-wrap" style="display: flex; gap: 8px; align-items: center;">
+            <span title="Empunhado" style="display: flex; align-items: center; gap: 2px;">
+                <span class="material-icons" style="font-size: 1.1em; color: var(--gold-dim);">front_hand</span>
+                <input type="checkbox" name="empunhado" onchange="salvarLista('inventario'); calcularPeso()">
+            </span>
+            <span title="Vestido" style="display: flex; align-items: center; gap: 2px;">
+                <span class="material-icons" style="font-size: 1.1em; color: var(--gold-dim);">checkroom</span>
+                <input type="checkbox" name="vestido" onchange="salvarLista('inventario'); calcularPeso()">
+            </span>
+            <span>Espaços: <input type="text" class="input-transparent d-inline w-25 text-center peso-calc" name="espacos" value="0" onblur="salvarLista('inventario'); calcularPeso()"></span>
+        </span>
                 <button class="btn-delete-item" onclick="removerItem(this, 'inventario')"><span class="material-icons">delete</span></button>
             </div>`;
             document.getElementById('lista-inventario').insertAdjacentHTML('beforeend', html);
@@ -764,6 +1016,126 @@
                 comps[skill] = parseInt(input.value) || 0;
             });
             salvar('competencias', comps);
+        }
+
+        function getPassosFisico(valorFisico) {
+            const val = parseInt(valorFisico) || 4;
+            if (val === 6) return 1;
+            if (val === 8) return 2;
+            if (val === 10) return 3;
+            if (val === 12) return 4;
+            if (val === 20) return 5;
+            return 0; // d4 ou valores inválidos
+        }
+
+        function getMaxEspacosMagia(classe, nivel) {
+            if (classe !== "Conjurador" && classe !== "Zelote") {
+                return [0, 0, 0, 0, 0, 0];
+            }
+            const lvl = parseInt(nivel) || 1;
+            const tabelaMagia = {
+                1: [1, 0, 0, 0, 0, 0],
+                2: [1, 0, 0, 0, 0, 0],
+                3: [2, 1, 0, 0, 0, 0],
+                4: [2, 1, 0, 0, 0, 0],
+                5: [2, 1, 0, 0, 0, 0],
+                6: [3, 2, 1, 0, 0, 0],
+                7: [3, 2, 1, 0, 0, 0],
+                8: [3, 2, 1, 0, 0, 0],
+                9: [4, 3, 2, 1, 0, 0],
+                10: [4, 3, 2, 1, 0, 0],
+                11: [4, 3, 2, 1, 0, 0],
+                12: [5, 4, 3, 2, 1, 0],
+                13: [5, 4, 3, 2, 1, 0],
+                14: [5, 4, 3, 2, 1, 0],
+                15: [6, 5, 4, 3, 2, 1],
+                16: [6, 5, 4, 3, 2, 1],
+                17: [6, 5, 4, 3, 2, 1],
+                18: [7, 6, 5, 4, 3, 2],
+                19: [7, 6, 5, 4, 3, 2],
+                20: [7, 6, 5, 4, 3, 2]
+            };
+            return tabelaMagia[lvl] || [0, 0, 0, 0, 0, 0];
+        }
+
+        function calcularPeso() {
+            const inventarioContainer = document.getElementById('lista-inventario');
+            if (!inventarioContainer) return;
+
+            const rows = inventarioContainer.querySelectorAll('.item-row');
+            let pesoAtual = 0;
+
+            rows.forEach(row => {
+                const qtdInput = row.querySelector('input[name="qtd"]');
+                const espacosInput = row.querySelector('input[name="espacos"]');
+
+                const qtd = parseFloat(qtdInput ? qtdInput.value : 0) || 0;
+                const espacos = parseFloat(espacosInput ? espacosInput.value : 0) || 0;
+
+                pesoAtual += (qtd * espacos);
+            });
+
+            const fisicoBase = parseInt('{{ ficha.fisico | default(4) }}');
+            const passosFis = getPassosFisico(fisicoBase);
+            const limitePeso = 10 + (2 * passosFis);
+            const limiteMaximo = limitePeso * 2;
+
+            const pesoLabel = document.getElementById('peso-label');
+            const pesoBar = document.getElementById('peso-bar');
+
+            if (pesoLabel && pesoBar) {
+                pesoLabel.textContent = `Peso: ${pesoAtual.toFixed(1)} / ${limitePeso}`;
+
+                let pct = (pesoAtual / limitePeso) * 100;
+                if (pct > 200) pct = 200; // maximo visual clamp
+
+                // UI feedback if over-encumbered or over max limit
+                if (pesoAtual > limiteMaximo) {
+                    pesoLabel.style.color = '#ff1744'; // estourou o limite máximo
+                    pesoLabel.textContent += " (IMÓVEL)";
+                } else if (pesoAtual > limitePeso) {
+                    pesoLabel.style.color = '#ff9100'; // sobrecarregado
+                    pesoLabel.textContent += " (SOBRECARREGADO)";
+                } else {
+                    pesoLabel.style.color = '#ccc';
+                }
+
+                // Bar visual (normal até 100%, sobrecarregado até 200%)
+                const visualPct = (pesoAtual / limiteMaximo) * 100;
+                pesoBar.style.width = `${Math.min(visualPct, 100)}%`;
+
+                if (visualPct <= 25) pesoBar.style.background = '#4caf50';
+                else if (visualPct <= 50) pesoBar.style.background = '#ffc107';
+                else if (visualPct < 100) pesoBar.style.background = '#ff9800';
+                else pesoBar.style.background = '#f44336';
+            }
+        }
+
+        // Run on load
+        document.addEventListener('DOMContentLoaded', () => {
+            calcularPeso();
+        });
+
+        function mudarFisico(selectObj) {
+            // Se não houver valor salvo previamente no dataset do elemento HTML, inicializamos com o valor Jinja
+            const valAntigoStr = selectObj.dataset.oldValue || '{{ ficha.fisico | default(4) }}';
+            const valAntigo = parseInt(valAntigoStr) || 4;
+            const valNovo = parseInt(selectObj.value);
+
+            const passosAntigos = getPassosFisico(valAntigo);
+            const passosNovos = getPassosFisico(valNovo);
+            const diferencaPassos = passosNovos - passosAntigos;
+
+            const pvMaxAtual = parseInt(document.getElementById('pv_max_input').value) || 0;
+
+            const payload = {
+                fisico: valNovo,
+                pv_max: pvMaxAtual + diferencaPassos
+            };
+
+            salvarMultiplos(payload).then(() => {
+                location.reload();
+            });
         }
 
         function openTab(evt, tabName) {

@@ -38,15 +38,17 @@
 
 <body>
 
+    <div
+        style="position: absolute; top: 20px; right: 30px; display: flex; align-items: center; gap: 10px; z-index: 100; text-shadow: 1px 1px 3px rgba(0,0,0,0.9);">
+        <span class="material-icons" style="color: var(--gold-dim);">account_circle</span>
+        <span style="color: var(--gold-dim); font-family: 'Cinzel', serif;">{{ usuario.username }}</span>
+        <a href="/logout"
+            style="color: #ff5252; text-decoration: none; font-size: 0.8em; margin-left: 10px; border: 1px solid #ff5252; padding: 2px 8px; border-radius: 2px; background: rgba(0,0,0,0.5); text-shadow: none;">Sair</a>
+    </div>
+
     <div class="container" style="max-width: 1000px;">
 
         <div class="hub-header" style="position: relative;">
-            <div style="position: absolute; top: -30px; right: 0; display: flex; align-items: center; gap: 10px;">
-                <span class="material-icons" style="color: var(--gold-dim);">account_circle</span>
-                <span style="color: var(--gold-dim); font-family: 'Cinzel', serif;">{{ usuario.username }}</span>
-                <a href="/logout"
-                    style="color: #ff5252; text-decoration: none; font-size: 0.8em; margin-left: 10px; border: 1px solid #ff5252; padding: 2px 8px; border-radius: 2px;">Sair</a>
-            </div>
             <h1 style="margin: 0; border: none; font-size: 2.2em; width: 100%;">Fichas de Jogador</h1>
             <span style="color: #666; font-family: 'Cinzel', serif;">Selecione seu Personagem</span>
         </div>

@@ -72,6 +72,8 @@ class Personagem(SQLModel, table=True):
     marcadores_morte: int = 0  
     marcadores_fadiga: int = 0 
     marcadores_cicatrizes: int = 0 
+    
+    descansos_curtos: int = Field(default=0)
 
     # IMPORTANTE: Usando sa_column=Column(JSON) para estabilidade no SQLite
     competencias: Dict[str, int] = Field(
@@ -100,10 +102,16 @@ class Personagem(SQLModel, table=True):
     cd_magia: int = Field(default=10)
     
     slots_nv1: int = Field(default=0)
+    slots_nv1_max: int = Field(default=0)
     slots_nv2: int = Field(default=0)
+    slots_nv2_max: int = Field(default=0)
     slots_nv3: int = Field(default=0)
+    slots_nv3_max: int = Field(default=0)
     slots_nv4: int = Field(default=0)
+    slots_nv4_max: int = Field(default=0)
     slots_nv5: int = Field(default=0)
+    slots_nv5_max: int = Field(default=0)
     slots_nv6: int = Field(default=0)
+    slots_nv6_max: int = Field(default=0)
     
     magias: List[Dict[str, Any]] = Field(default_factory=list, sa_column=Column(JSON))

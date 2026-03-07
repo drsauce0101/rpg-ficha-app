@@ -254,11 +254,13 @@ async def api_atualizar_campo(
             # Converte números se necessário
             int_fields = [
                 'nivel', 'pv_max', 'pv_atual', 'pv_bonus', 'pa_max', 'pa_atual', 'pa_bonus', 'defesa', 
-                'pg_max', 'pg_atual', 'pg_bonus', 'ph_max', 'ph_atual', 'ph_bonus',
+                'pg_max', 'pg_atual', 'pg_bonus', 'ph_max', 'ph_atual', 'ph_bonus', 'descansos_curtos',
                 'fisico', 'presenca', 'carisma', 'astucia', 
                 'bonus_fisico', 'bonus_presenca', 'bonus_carisma', 'bonus_astucia',
                 'fisico_exp', 'fisico_inc', 'presenca_exp', 'presenca_inc',
-                'carisma_exp', 'carisma_inc', 'astucia_exp', 'astucia_inc'
+                'carisma_exp', 'carisma_inc', 'astucia_exp', 'astucia_inc',
+                'slots_nv1', 'slots_nv2', 'slots_nv3', 'slots_nv4', 'slots_nv5', 'slots_nv6',
+                'slots_nv1_max', 'slots_nv2_max', 'slots_nv3_max', 'slots_nv4_max', 'slots_nv5_max', 'slots_nv6_max'
             ]
             if campo in int_fields:
                 valor = safe_int(valor)
