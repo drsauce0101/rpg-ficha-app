@@ -111,10 +111,20 @@
                         <button class="btn-novo bg-333"
                             style="color: #2196f3 !important; border-color: #1976d2 !important;"
                             onclick="abrirModalDescanso('{{ ficha.descansos_curtos | default(0) }}')">DESCANSO</button>
-
+                        <button id="btn-dddice" class="btn-novo bg-333"
+                            style="color: #b388ff !important; border-color: #7e57c2 !important; display:flex; align-items:center; gap:5px;"
+                            onclick="abrirPainelDddice()">
+                            🎲 DDDICE
+                            <span id="dddice-header-dot" style="
+                                display: inline-block; width: 7px; height: 7px;
+                                border-radius: 50%; background: #555;
+                                transition: background 0.3s, box-shadow 0.3s;
+                            "></span>
+                        </button>
                         {% endif %}
                         <a href="/" class="btn-novo bg-333">VOLTAR</a>
                     </div>
+
                 </div>
 
                 <!-- Right: Level Circle -->
@@ -265,10 +275,23 @@
                                     {% endfor %}
                                 </select>
                             </div>
+                            {% set exp_val = ficha|attr(field ~ '_exp')|int %}
+                            {% set inc_val = ficha|attr(field ~ '_inc')|int %}
+                            <button
+                                title="Rolar {{ label }} via dddice (d{{ valor }}{% if exp_val > 0 %} +d{{ exp_val }}{% endif %}{% if inc_val > 0 %} -d{{ inc_val }}{% endif %}{% set bv = ficha|attr('bonus_' ~ field)|int %}{% if bv > 0 %} +{{ bv }}{% elif bv < 0 %} {{ bv }}{% endif %})"
+                                onclick="rolarAtributo('d{{ valor }}', '{{ label }}', {{ ficha|attr('bonus_' ~ field)|int }}, {{ exp_val }}, {{ inc_val }})"
+                                class="btn-roll-attribute" onmouseover="this.classList.add('hover')"
+                                onmouseout="this.classList.remove('hover')">
+                                <span class="material-icons"
+                                    style="font-size: 1rem; vertical-align: middle;">casino</span>
+                            </button>
+
+
 
                             <div style="display: flex; gap: 10px; margin-top: 10px; justify-content: center;">
 
                                 {% set exp_val = ficha|attr(field ~ '_exp')|int %}
+
                                 <div class="mini-dice-container expertise-dice" title="Expertise (+)">
                                     <svg class="dice-svg {{ 'empty-dice' if exp_val == 0 else '' }}"
                                         viewBox="0 0 100 100">
@@ -447,7 +470,8 @@
                                 style="display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 1rem;">
                                 <input type="number" id="slots_nv{{ i }}_input"
                                     class="input-transparent w-40 text-right" value="{{ ficha|attr('slots_nv' ~ i) }}"
-                                    onblur="salvar('slots_nv{{ i }}', this.value)"> /
+                                    onblur="salvar('slots_nv{{ i }}', this.value)">
+                                /
                                 <input type="number" id="slots_nv{{ i }}_max_input"
                                     class="input-transparent w-40 text-left editable-stat"
                                     value="{{ ficha|attr('slots_nv' ~ i ~ '_max')|default(0) }}"
@@ -1798,6 +1822,19 @@
     {% endif %}
 
     </div>
+
+    <!-- DDDICE: Canvas fullscreen para animação 3D dos dados -->
+    <canvas id="dddice-canvas" style="
+        position: fixed; top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        pointer-events: none;
+        z-index: 9998;
+    "></canvas>
+
+    <!-- DDDICE: SDK via CDN -->
+    <script src="https://cdn.dddice.com/js/dddice-latest.js"></script>
+    <!-- DDDICE: Integração Giharad -->
+    <script src="/static/js/dddice_integration.js"></script>
 
 </body>
 
