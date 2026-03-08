@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ ficha.nome }} - Giharad</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link href="/static/css/style.css?v=61" rel="stylesheet">
+    <link href="/static/css/style.css?v=62" rel="stylesheet">
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const bgImages = ['medieval-background.jpg', 'medieval-background2.jpg', 'medieval-background3.jpg', 'medieval-background4.jpg'];
@@ -111,6 +111,7 @@
                         <button class="btn-novo bg-333"
                             style="color: #2196f3 !important; border-color: #1976d2 !important;"
                             onclick="abrirModalDescanso('{{ ficha.descansos_curtos | default(0) }}')">DESCANSO</button>
+
                         {% endif %}
                         <a href="/" class="btn-novo bg-333">VOLTAR</a>
                     </div>
@@ -235,6 +236,7 @@
                         {% endmacro %}
 
                         {% for label, field in attrs %}
+                        {% set valor = ficha|attr(field)|int %}
                         <div class="stat-box" style="padding: 10px 0;">
                             <span class="stat-label">{{ label }}</span>
 
@@ -250,13 +252,13 @@
                             </div>
 
                             <div class="dice-container">
-                                {% set valor = ficha|attr(field)|int %}
                                 <svg class="dice-svg" viewBox="0 0 100 100">
                                     {{ draw_svg(valor) }}
                                 </svg>
                                 <span class="dice-label">{{ valor }}</span>
-                                <select class="dice-select-hidden" data-old-value="{{ valor }}"
-                                    onchange="if ('{{ field }}' === 'fisico') { mudarFisico(this); } else { salvar('{{ field }}', this.value).then(() => location.reload()); }">
+                                <select class="dice-select-hidden" data-field="{{ field }}" data-old-value="{{ valor }}"
+                                    onclick="event.stopPropagation()"
+                                    onchange="if ('{{ field }}' === 'fisico') { mudarFisico(this); } else { mudarAtributo(this, '{{ field }}'); }">
                                     {% for faces in [4, 6, 8, 10, 12, 20] %}
                                     <option value="{{ faces }}" {{ 'selected' if valor==faces else '' }}>d{{ faces }}
                                     </option>
@@ -273,8 +275,8 @@
                                         {{ draw_svg(exp_val) }}
                                     </svg>
                                     <span class="mini-dice-label">{{ exp_val if exp_val > 0 else '' }}</span>
-                                    <select class="dice-select-hidden"
-                                        onchange="salvar('{{ field }}_exp', this.value).then(() => location.reload())">
+                                    <select class="dice-select-hidden" data-mini-field="{{ field }}_exp"
+                                        data-mini-type="exp" onchange="mudarMiniDado(this, '{{ field }}_exp', 'exp')">
                                         <option value="0" {{ 'selected' if exp_val==0 else '' }}>-</option>
                                         {% for faces in [4, 6, 8, 10, 12] %}
                                         <option value="{{ faces }}" {{ 'selected' if exp_val==faces else '' }}>d{{ faces
@@ -291,8 +293,8 @@
                                         {{ draw_svg(inc_val) }}
                                     </svg>
                                     <span class="mini-dice-label">{{ inc_val if inc_val > 0 else '' }}</span>
-                                    <select class="dice-select-hidden"
-                                        onchange="salvar('{{ field }}_inc', this.value).then(() => location.reload())">
+                                    <select class="dice-select-hidden" data-mini-field="{{ field }}_inc"
+                                        data-mini-type="inc" onchange="mudarMiniDado(this, '{{ field }}_inc', 'inc')">
                                         <option value="0" {{ 'selected' if inc_val==0 else '' }}>-</option>
                                         {% for faces in [4, 6, 8, 10, 12] %}
                                         <option value="{{ faces }}" {{ 'selected' if inc_val==faces else '' }}>d{{ faces
@@ -360,11 +362,15 @@
                         </span>
                     </div>
                     <div class="atk-stats-grid">
-                        <div>Acerto: <strong class="white-text"><input type="text"
+                        <div>
+                            Acerto: <strong class="white-text"><input type="text"
                                     class="input-transparent d-inline w-40" name="acerto" value="{{ atk.acerto }}"
-                                    onblur="salvarLista('ataques')"></strong></div>
-                        <div>Dano: <strong class="white-text"><input type="text" class="input-transparent d-inline w-60"
-                                    name="dano" value="{{ atk.dano }}" onblur="salvarLista('ataques')"></strong></div>
+                                    onblur="salvarLista('ataques')"></strong>
+                        </div>
+                        <div>
+                            Dano: <strong class="white-text"><input type="text" class="input-transparent d-inline w-60"
+                                    name="dano" value="{{ atk.dano }}" onblur="salvarLista('ataques')"></strong>
+                        </div>
                         <div>Margem: <input type="text" class="input-transparent d-inline w-40" name="margem"
                                 value="{{ atk.margem }}" onblur="salvarLista('ataques')"></div>
                         <div>Explosivo: <input type="text" class="input-transparent d-inline w-40" name="explosivo"
@@ -455,30 +461,43 @@
                     <h3 class="section-title">Grimório</h3>
                     <div id="lista-magias" class="mag-list-panel">
                         {% for mag in ficha.magias %}
-                        <div class="card-container item-row mag-card">
-                            <div class="flex-between">
-                                <strong class="mag-name-wrap">
-                                    <input type="text" class="input-transparent" name="nome" value="{{ mag.nome }}"
-                                        placeholder="Nome do Feitiço" onblur="salvarLista('magias')">
-                                </strong>
-                                <span class="mag-circle-wrap">
-                                    <input type="text" class="input-transparent w-20 text-center magic-color"
-                                        name="circulo" value="{{ mag.circulo }}" onblur="salvarLista('magias')">º
-                                </span>
+                        <div class="card-container item-row mag-card mag-card-resumido" onclick="abrirModalMagia(this)">
+                            <!-- Campos ocultos para salvarLista -->
+                            <input type="hidden" name="nome" value="{{ mag.nome }}">
+                            <input type="hidden" name="escola" value="{{ mag.escola }}">
+                            <input type="hidden" name="circulo" value="{{ mag.circulo }}">
+                            <input type="hidden" name="alcance" value="{{ mag.alcance }}">
+                            <input type="hidden" name="alvo" value="{{ mag.alvo }}">
+                            <input type="hidden" name="duracao" value="{{ mag.duracao }}">
+                            <input type="hidden" name="resistencia" value="{{ mag.resistencia }}">
+                            <input type="hidden" name="efeito" value="{{ mag.efeito }}">
+                            <input type="hidden" name="superior" value="{{ mag.superior }}">
+                            <input type="hidden" name="is_ritual" value="{{ 'true' if mag.is_ritual else '' }}">
+                            <input type="hidden" name="tempo_ritual" value="{{ mag.tempo_ritual }}">
+                            <input type="hidden" name="ilustracao" value="{{ mag.ilustracao }}">
+
+                            <div class="mag-resumo-left">
+                                <div class="mag-icon" data-escola="{{ mag.escola }}">
+                                    <!-- Ícone será definido via CSS/JS baseado na escola -->
+                                </div>
+                                <div class="mag-resumo-info">
+                                    <strong class="mag-titulo-resumo">{{ mag.nome or 'Novo Feitiço' }}</strong>
+                                    <span class="mag-subtitulo-resumo">{{ mag.escola or 'Sem Escola' }}</span>
+                                </div>
                             </div>
-                            <div class="mag-effect-wrap">
-                                <textarea class="input-transparent" name="efeito" rows="1" placeholder="Efeito..."
-                                    onblur="salvarLista('magias')">{{ mag.efeito }}</textarea>
+                            <div class="mag-resumo-right">
+                                <div class="mag-circulo-badge">{{ mag.circulo or '1' }}º</div>
+                                {% if is_owner %}
+                                <button class="btn-delete-item mag-delete-btn"
+                                    onclick="event.stopPropagation(); removerItem(this, 'magias')"><span
+                                        class="material-icons">delete</span></button>
+                                {% endif %}
                             </div>
-                            {% if is_owner %}
-                            <button class="btn-delete-item" onclick="removerItem(this, 'magias')"><span
-                                    class="material-icons">delete</span></button>
-                            {% endif %}
                         </div>
                         {% endfor %}
                     </div>
                     {% if is_owner %}
-                    <button class="btn-add btn-add-magic" onclick="adicionarMagia()">+ Adicionar Magia</button>
+                    <button class="btn-add btn-add-magic" onclick="abrirModalMagia('NOVO')">+ Adicionar Feitiço</button>
                     {% endif %}
                 </div>
             </div>
@@ -596,10 +615,19 @@
 
         function salvarMultiplos(camposObj) {
             {% if not is_owner %} return Promise.resolve(); {% endif %}
+            mostrarToast('Salvando...', 'info');
             return fetch(`/api/atualizar_campo/{{ ficha.id }}`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(camposObj)
-            }).then(r => { if (!r.ok) console.error("Erro ao salvar"); return r; });
+            }).then(r => {
+                if (!r.ok) {
+                    mostrarToast('Erro ao salvar!', 'error');
+                    console.error("Erro ao salvar");
+                } else {
+                    mostrarToast('Salvo!', 'success');
+                }
+                return r;
+            });
         }
 
         function toggleReadonly(inputId) {
@@ -680,7 +708,19 @@
                 };
 
                 salvarMultiplos(payload).then(() => {
-                    location.reload();
+                    // Atualiza UI sem reload
+                    document.getElementById('nivel_input').value = novoNivel;
+                    document.getElementById('pv_max_input').value = novoPvMax;
+                    document.getElementById('pv_atual_input').value = payload.pv_atual;
+                    document.getElementById('pa_max_input').value = novoPaMax;
+                    document.getElementById('pa_atual_input').value = payload.pa_atual;
+                    document.getElementById('pg_max_input').value = novoPgPhMax;
+                    document.getElementById('ph_max_input').value = novoPgPhMax;
+                    for (let i = 1; i <= 6; i++) {
+                        const el = document.getElementById(`slots_nv${i}_max_input`);
+                        if (el) el.value = magSlots[i - 1];
+                    }
+                    mostrarToast(`Evoluído para nível ${novoNivel}!`, 'success');
                 });
             });
         }
@@ -732,7 +772,16 @@
                 };
 
                 salvarMultiplos(payload).then(() => {
-                    location.reload();
+                    // Atualiza UI sem reload
+                    document.getElementById('pv_max_input').value = totalPvMax;
+                    document.getElementById('pa_max_input').value = totalPaMax;
+                    document.getElementById('pg_max_input').value = totalPgPhMax;
+                    document.getElementById('ph_max_input').value = totalPgPhMax;
+                    for (let i = 1; i <= 6; i++) {
+                        const el = document.getElementById(`slots_nv${i}_max_input`);
+                        if (el) el.value = magSlots[i - 1];
+                    }
+                    mostrarToast('Atributos recalculados!', 'success');
                 });
             });
         }
@@ -827,7 +876,12 @@
                         descansos_curtos: descansosCurtosInt + 1
                     };
 
-                    salvarMultiplos(payload).then(() => location.reload());
+                    salvarMultiplos(payload).then(() => {
+                        document.getElementById('pv_atual_input').value = payload.pv_atual;
+                        document.getElementById('pa_atual_input').value = payload.pa_atual;
+                        overlay.remove();
+                        mostrarToast('Descanso Curto realizado!', 'info');
+                    });
                 };
             }
 
@@ -886,7 +940,16 @@
                                 slots_nv6: s6Max
                             };
 
-                            salvarMultiplos(payload).then(() => location.reload());
+                            salvarMultiplos(payload).then(() => {
+                                document.getElementById('pv_atual_input').value = newPv;
+                                document.getElementById('pa_atual_input').value = newPa;
+                                for (let i = 1; i <= 6; i++) {
+                                    const el = document.getElementById(`slots_nv${i}_input`);
+                                    if (el) el.value = payload[`slots_nv${i}`];
+                                }
+                                overlay.remove();
+                                mostrarToast('Descanso Longo realizado!', 'success');
+                            });
                         };
                     };
 
@@ -900,8 +963,14 @@
 
         function salvarLista(tipo) {
             {% if not is_owner %} return; {% endif %}
+            console.log(`salvarLista: salvando lista tipo ${tipo}`);
             const container = document.getElementById(`lista-${tipo}`);
+            if (!container) {
+                console.warn(`salvarLista: container lista-${tipo} não encontrado!`);
+                return;
+            }
             const rows = container.querySelectorAll('.item-row');
+            console.log(`salvarLista: encontradas ${rows.length} linhas em lista-${tipo}`);
             const data = [];
             rows.forEach(row => {
                 let obj = {};
@@ -912,8 +981,9 @@
                         obj[input.name] = input.value;
                     }
                 });
-                if (obj.nome) data.push(obj);
+                if (obj.nome || obj.efeito) data.push(obj);
             });
+            console.log(`salvarLista: enviando ${data.length} itens para o servidor`);
             salvar(tipo, data);
         }
 
@@ -952,10 +1022,18 @@
         }
 
         function removerItem(btn, tipo) {
+            console.log(`removerItem solicitado para tipo: ${tipo}`);
             showConfirmModal("Deseja realmente remover este item?", () => {
-                btn.closest('.item-row').remove();
-                salvarLista(tipo);
-                if (tipo === 'inventario') calcularPeso();
+                console.log(`removerItem confirmado para tipo: ${tipo}`);
+                const row = btn.closest('.item-row');
+                if (row) {
+                    row.remove();
+                    console.log(`removerItem: linha removida do DOM`);
+                    salvarLista(tipo);
+                    if (tipo === 'inventario') calcularPeso();
+                } else {
+                    console.error("removerItem: .item-row não encontrada para o botão");
+                }
             });
         }
 
@@ -998,20 +1076,6 @@
             document.getElementById('lista-habilidades').insertAdjacentHTML('beforeend', html);
         }
 
-        function adicionarMagia() {
-            const html = `<div class="card-container item-row mag-card">
-                <div class="flex-between">
-                    <strong class="mag-name-wrap"><input type="text" class="input-transparent" name="nome" placeholder="Novo Feitiço" onblur="salvarLista('magias')"></strong>
-                    <span class="mag-circle-wrap"><input type="text" class="input-transparent w-20 text-center magic-color" name="circulo" placeholder="1" onblur="salvarLista('magias')">º</span>
-                </div>
-                <div class="mag-effect-wrap">
-                    <textarea class="input-transparent" name="efeito" rows="1" placeholder="Efeito..." onblur="salvarLista('magias')"></textarea>
-                </div>
-                <button class="btn-delete-item" onclick="removerItem(this, 'magias')"><span class="material-icons">delete</span></button>
-            </div>`;
-            document.getElementById('lista-magias').insertAdjacentHTML('beforeend', html);
-        }
-
         function adicionarItemInventario() {
             const html = `<div class="card-container item-row inv-card">
                 <span class="flex-grow-1">
@@ -1049,7 +1113,21 @@
 
         function marcar(campo, index, atual) {
             const novoValor = (atual === index) ? index - 1 : index;
-            salvar(campo, novoValor).then(() => location.reload());
+            salvar(campo, novoValor).then(() => {
+                // Atualiza os círculos de marcador sem reload
+                const circulos = document.querySelectorAll(`.marcador-click[onclick*="'${campo}'"]`);
+                circulos.forEach((circ, i) => {
+                    const circIndex = i + 1;
+                    const borderColor = circ.style.borderColor || circ.style.border.match(/[^,]+$/)?.[0]?.trim() || '#ccc';
+                    // Detecta a cor da borda original do elemento
+                    const styleAttr = circ.getAttribute('style') || '';
+                    const borderMatch = styleAttr.match(/border:\s*1px solid ([^;]+)/);
+                    const cor = borderMatch ? borderMatch[1].trim() : '#ccc';
+                    circ.style.background = circIndex <= novoValor ? cor : 'transparent';
+                    // Atualiza o onclick para refletir o novo valor
+                    circ.setAttribute('onclick', `marcar('${campo}', ${circIndex}, ${novoValor})`);
+                });
+            });
         }
 
         function salvarCompetencia() {
@@ -1155,10 +1233,374 @@
             }
         }
 
+
         // Run on load
         document.addEventListener('DOMContentLoaded', () => {
             calcularPeso();
+            renderizarIconesMagias();
         });
+
+        // ==========================================
+        // SISTEMA DE GRIMÓRIO (MODAL E CARDS)
+        // ==========================================
+
+        const iconesEscola = {
+            'Abjuração': 'security',
+            'Adivinhação': 'visibility',
+            'Conjuração': 'auto_awesome',
+            'Encantamento': 'psychology',
+            'Evocação': 'local_fire_department',
+            'Ilusão': 'blur_on',
+            'Necromancia': 'skull', // Material icons doesnt have skull typically, using a fallback if needed or sticking to what works
+            'Transmutação': 'change_circle'
+        };
+
+        function getIconeMagia(escola) {
+            const defaultIcon = 'auto_awesome';
+            if (!escola) return defaultIcon;
+
+            // Busca aproximação se o nome for levemente diferente
+            for (const key in iconesEscola) {
+                if (escola.toLowerCase().includes(key.toLowerCase())) {
+                    return iconesEscola[key];
+                }
+            }
+            return defaultIcon;
+        }
+
+        function renderizarIconesMagias() {
+            document.querySelectorAll('.mag-card-resumido').forEach(card => {
+                const escolaInput = card.querySelector('input[name="escola"]');
+                const ilustracaoInput = card.querySelector('input[name="ilustracao"]');
+                const iconContainer = card.querySelector('.mag-icon');
+                if (escolaInput && iconContainer) {
+                    const escolaStr = escolaInput.value || '';
+                    const ilustracaoStr = ilustracaoInput ? ilustracaoInput.value : '';
+                    const isRitualReq = card.querySelector('input[name="is_ritual"]');
+                    const isRitual = isRitualReq ? isRitualReq.value === 'true' : false;
+
+                    let iconName = getIconeMagia(escolaStr);
+
+                    if (ilustracaoStr) {
+                        iconContainer.style.backgroundImage = `url('${ilustracaoStr}')`;
+                        iconContainer.style.backgroundSize = 'cover';
+                        iconContainer.style.backgroundPosition = 'center';
+                        iconContainer.innerHTML = '';
+                    } else {
+                        iconContainer.style.backgroundImage = 'none';
+                        iconContainer.innerHTML = `<span class="material-icons">${iconName}</span>`;
+                    }
+
+                    if (isRitual) {
+                        iconContainer.innerHTML += `<span class="mag-ritual-badge" title="Ritual">R</span>`;
+                    }
+                }
+            });
+        }
+
+        let magicCardSendoEditado = null;
+
+        function abrirModalMagia(cardElementOrNovo, overrideMode = null) {
+            const isNovo = (cardElementOrNovo === 'NOVO');
+            magicCardSendoEditado = isNovo ? null : cardElementOrNovo;
+
+            // Determinar o modo: 'edit' se for novo, ou se forçar. 'view' se for card existente.
+            let modo = isNovo ? 'edit' : 'view';
+            if (overrideMode) modo = overrideMode;
+
+            {% if not is_owner %}
+            // Se for visualizador, barra o 'edit' completamente
+            if (modo === 'edit') return;
+            {% endif %}
+
+            // Extrair dados atuais
+            const dados = {
+                nome: '', escola: '', circulo: '', alcance: '', alvo: '',
+                duracao: '', resistencia: '', efeito: '', superior: '', is_ritual: false, tempo_ritual: '',
+                ilustracao: ''
+            };
+
+            if (!isNovo && magicCardSendoEditado) {
+                Object.keys(dados).forEach(key => {
+                    if (key === 'is_ritual') {
+                        const isRitualReq = magicCardSendoEditado.querySelector(`input[name="is_ritual"]`);
+                        dados[key] = isRitualReq ? isRitualReq.value === 'true' : false;
+                    } else {
+                        dados[key] = magicCardSendoEditado.querySelector(`input[name="${key}"]`)?.value || '';
+                    }
+                });
+            }
+
+            // Remove o overlay existente se estiver trocando de view pra edit
+            const existingOverlay = document.querySelector('.magic-modal-overlay');
+            if (existingOverlay) existingOverlay.remove();
+
+            const overlay = document.createElement('div');
+            overlay.className = 'custom-modal-overlay magic-modal-overlay';
+            overlay.onclick = (e) => { if (e.target === overlay) document.body.removeChild(overlay); };
+
+            const box = document.createElement('div');
+            box.className = 'custom-modal-box magic-modal-box';
+
+            // Variável isowner em JS para controle visual do modal
+            const isOwnerJS = {% if is_owner %} true{% else %} false{% endif %};
+
+        if (modo === 'edit') {
+            box.innerHTML = `
+                    <div class="magic-modal-header">
+                        <h2 style="margin: 0; color: var(--gold); font-family: 'Cinzel', serif;">
+                            ${isNovo ? 'Adicionar Feitiço' : 'Editar Feitiço'}
+                        </h2>
+                        <span class="material-icons magic-modal-close" onclick="this.closest('.magic-modal-overlay').remove()">close</span>
+                    </div>
+                    
+                    <div class="magic-modal-body">
+                        <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                            <!-- Upload de Ilustração -->
+                            <div style="flex: 0 0 120px; display: flex; flex-direction: column; align-items: center; gap: 5px;">
+                                <label class="magic-modal-label" style="text-align: center;">ILUSTRAÇÃO</label>
+                                <div class="mag-modal-upload-box" onclick="document.getElementById('mag-modal-ilustracao-input').click()" style="width: 120px; height: 120px; border: 1px dashed var(--gold-dim); border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: rgba(0,0,0,0.4); overflow: hidden; position: relative;">
+                                    ${dados.ilustracao ? `<img src="${dados.ilustracao}" id="mag-modal-preview" style="width: 100%; height: 100%; object-fit: cover;">` : `<span id="mag-modal-preview-icon" class="material-icons" style="font-size: 40px; color: var(--gold-dim);">add_photo_alternate</span><img id="mag-modal-preview" style="display: none; width: 100%; height: 100%; object-fit: cover;">`}
+                                </div>
+                                <input type="file" id="mag-modal-ilustracao-input" accept="image/*" style="display: none;" onchange="handleMagiaUpload(event)">
+                                <input type="hidden" id="mag-modal-ilustracao-base64" value="${dados.ilustracao}">
+                            </div>
+
+                            <div style="flex: 1; display: flex; flex-direction: column; gap: 10px;">
+                                <div style="display: flex; gap: 10px;">
+                                    <div style="flex: 2;">
+                                        <label class="magic-modal-label">NOME DO FEITIÇO</label>
+                                        <input type="text" id="mag-modal-nome" class="magic-modal-input" value="${dados.nome}" placeholder="Ex: Bola de Fogo">
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <label class="magic-modal-label">CÍRCULO</label>
+                                        <input type="text" id="mag-modal-circulo" class="magic-modal-input text-center" value="${dados.circulo}" placeholder="1">
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 10px;">
+                                    <div style="flex: 1;">
+                                        <label class="magic-modal-label">ESCOLA</label>
+                                        <input type="text" id="mag-modal-escola" class="magic-modal-input" value="${dados.escola}" placeholder="Ex: Evocação">
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <label class="magic-modal-label">ALCANCE</label>
+                                        <input type="text" id="mag-modal-alcance" class="magic-modal-input" value="${dados.alcance}" placeholder="Ex: Curto">
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 10px;">
+                                    <div style="flex: 1;">
+                                        <label class="magic-modal-label">ALVO/ÁREA</label>
+                                        <input type="text" id="mag-modal-alvo" class="magic-modal-input" value="${dados.alvo}" placeholder="...">
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <label class="magic-modal-label">DURAÇÃO</label>
+                                        <input type="text" id="mag-modal-duracao" class="magic-modal-input" value="${dados.duracao}" placeholder="Ex: Instantânea">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <label class="magic-modal-label">TESTE DE RESISTÊNCIA</label>
+                            <input type="text" id="mag-modal-resistencia" class="magic-modal-input" value="${dados.resistencia}" placeholder="Ex: Reflexos reduz à metade">
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <label class="magic-modal-label">DESCRIÇÃO</label>
+                            <textarea id="mag-modal-efeito" class="magic-modal-textarea" rows="4" placeholder="...">${dados.efeito}</textarea>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <label class="magic-modal-label" style="color: #b388ff;">CÍRCULOS SUPERIORES (Opcional)</label>
+                            <textarea id="mag-modal-superior" class="magic-modal-textarea" rows="2" placeholder="Efeitos adicionais..." style="border-left: 2px solid #b388ff;">${dados.superior}</textarea>
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 4px;">
+                            <input type="checkbox" id="mag-modal-ritual" ${dados.is_ritual ? 'checked' : ''} onchange="document.getElementById('ritual-info-box').style.display = this.checked ? 'block' : 'none';">
+                            <label for="mag-modal-ritual" style="color: #fff; cursor: pointer; font-family: 'Cinzel', serif;">ESTE FEITIÇO É UM RITUAL</label>
+                        </div>
+                        
+                        <div id="ritual-info-box" style="display: ${dados.is_ritual ? 'block' : 'none'}; margin-bottom: 15px;">
+                            <label class="magic-modal-label">TEMPO / REQUISITOS DO RITUAL</label>
+                            <input type="text" id="mag-modal-tempo-ritual" class="magic-modal-input" value="${dados.tempo_ritual}" placeholder="Ex: 10 minutos">
+                        </div>
+                    </div>
+
+                    <div class="magic-modal-footer" style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button class="custom-modal-btn cancel" style="flex: 1;" onclick="this.closest('.magic-modal-overlay').remove()">Cancelar</button>
+                        <button class="custom-modal-btn confirm" style="flex: 1;" onclick="salvarModalMagia()">Salvar Feitiço</button>
+                    </div>
+                `;
+        } else {
+            // MODO VIEW (Leitura de Pergaminho Visual - TCG Card)
+            const circuloText = dados.circulo ? `${dados.circulo}º Círculo` : 'Truque';
+            const escolaIcon = getIconeMagia(dados.escola);
+
+            // Layout da carta TCG
+            box.style.padding = "0"; // Sobrecrescreve paddings padrões da box p/ a carta ocupar tudo
+            box.style.background = "transparent";
+            box.style.border = "none";
+            box.style.boxShadow = "none";
+            box.style.maxWidth = "400px";
+
+            let headerBgColor = "#b388ff"; // Default para magia
+            if (dados.escola.toLowerCase().includes('abjuração')) headerBgColor = "#66bb6a";
+            else if (dados.escola.toLowerCase().includes('adivinhação')) headerBgColor = "#42a5f5";
+            else if (dados.escola.toLowerCase().includes('conjuração')) headerBgColor = "#ffa726";
+            else if (dados.escola.toLowerCase().includes('encantamento')) headerBgColor = "#ec407a";
+            else if (dados.escola.toLowerCase().includes('evocação')) headerBgColor = "#ef5350";
+            else if (dados.escola.toLowerCase().includes('ilusão')) headerBgColor = "#ab47bc";
+            else if (dados.escola.toLowerCase().includes('necromancia')) headerBgColor = "#26a69a";
+            else if (dados.escola.toLowerCase().includes('transmutação')) headerBgColor = "#8d6e63";
+
+            box.innerHTML = `
+                <div class="tcg-card-frame">
+                    
+                    <div class="tcg-card-header" style="background: linear-gradient(90deg, #111, ${headerBgColor} 80%);">
+                        <div class="tcg-card-name">${dados.nome || 'Feitiço Sem Nome'}</div>
+                        <div class="tcg-card-mana">${dados.circulo || '0'}</div>
+                    </div>
+
+                    <div class="tcg-card-image" style="background-image: url('${dados.ilustracao || ''}');">
+                        ${!dados.ilustracao ? `<div style="display:flex; height:100%; width:100%; align-items:center; justify-content:center;"><span class="material-icons" style="font-size: 80px; color: rgba(255,255,255,0.1);">${escolaIcon}</span></div>` : ''}
+                    </div>
+
+                    <div class="tcg-card-type-bar">
+                        ${dados.escola || 'Escola Mágica'} ${dados.is_ritual ? '— Ritual' : ''}
+                    </div>
+
+                    <div class="tcg-card-text-box">
+                        <div class="tcg-card-stats-row">
+                            <span><b>Alcance:</b> ${dados.alcance || 'Pessoal'}</span>
+                            <span><b>Alvo:</b> ${dados.alvo || 'O Conjurador'}</span>
+                        </div>
+                        <div class="tcg-card-stats-row">
+                            <span><b>Duração:</b> ${dados.duracao || 'Instântanea'}</span>
+                            ${dados.resistencia ? `<span><b>Resist:</b> ${dados.resistencia}</span>` : ''}
+                        </div>
+                        ${dados.is_ritual && dados.tempo_ritual ? `
+                        <div class="tcg-card-stats-row" style="color: #4caf50;">
+                            <span><b>Requisito/Ritual:</b> ${dados.tempo_ritual}</span>
+                        </div>` : ''}
+                        <hr class="tcg-card-separator">
+                        <div class="tcg-card-desc">
+                            ${dados.efeito ? dados.efeito.replace(/\n/g, '<br>') : 'Nenhuma descrição fornecida para este feitiço.'}
+                        </div>
+                        ${dados.superior ? `
+                        <div class="tcg-card-superior">
+                            <b>Em Círculos Superiores:</b><br>
+                            ${dados.superior.replace(/\n/g, '<br>')}
+                        </div>` : ''}
+                    </div>
+                </div>
+
+                <div class="tcg-card-footer-buttons">
+                    ${isOwnerJS ? `
+                    <button class="custom-modal-btn cancel" onclick="abrirModalMagia(magicCardSendoEditado, 'edit')">Editar</button>
+                    ` : ''}
+                    <button class="custom-modal-btn confirm" onclick="this.closest('.magic-modal-overlay').remove()">Fechar</button>
+                </div>
+            `;
+        }
+
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+    }
+
+        function handleMagiaUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const base64Str = e.target.result;
+                document.getElementById('mag-modal-ilustracao-base64').value = base64Str;
+                const previewIcon = document.getElementById('mag-modal-preview-icon');
+                const previewImg = document.getElementById('mag-modal-preview');
+                if (previewIcon) previewIcon.style.display = 'none';
+                if (previewImg) {
+                    previewImg.src = base64Str;
+                    previewImg.style.display = 'block';
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function salvarModalMagia() {
+            const overlay = document.querySelector('.magic-modal-overlay');
+            if (!overlay) return;
+
+            const dados = {
+                nome: document.getElementById('mag-modal-nome').value,
+                escola: document.getElementById('mag-modal-escola').value,
+                circulo: document.getElementById('mag-modal-circulo').value,
+                alcance: document.getElementById('mag-modal-alcance').value,
+                alvo: document.getElementById('mag-modal-alvo').value,
+                duracao: document.getElementById('mag-modal-duracao').value,
+                resistencia: document.getElementById('mag-modal-resistencia').value,
+                efeito: document.getElementById('mag-modal-efeito').value,
+                superior: document.getElementById('mag-modal-superior').value,
+                is_ritual: document.getElementById('mag-modal-ritual').checked ? 'true' : '',
+                tempo_ritual: document.getElementById('mag-modal-tempo-ritual').value,
+                ilustracao: document.getElementById('mag-modal-ilustracao-base64').value
+            };
+
+            if (!magicCardSendoEditado) {
+                // Criar novo card HTML
+                const html = `
+            <div class="card-container item-row mag-card mag-card-resumido" onclick="abrirModalMagia(this)">
+                <input type="hidden" name="nome" value="">
+                <input type="hidden" name="escola" value="">
+                <input type="hidden" name="circulo" value="">
+                <input type="hidden" name="alcance" value="">
+                <input type="hidden" name="alvo" value="">
+                <input type="hidden" name="duracao" value="">
+                <input type="hidden" name="resistencia" value="">
+                <input type="hidden" name="efeito" value="">
+                <input type="hidden" name="superior" value="">
+                <input type="hidden" name="is_ritual" value="">
+                <input type="hidden" name="tempo_ritual" value="">
+                <input type="hidden" name="ilustracao" value="">
+
+                <div class="mag-resumo-left">
+                    <div class="mag-icon"></div>
+                    <div class="mag-resumo-info">
+                        <strong class="mag-titulo-resumo"></strong>
+                        <span class="mag-subtitulo-resumo"></span>
+                    </div>
+                </div>
+                <div class="mag-resumo-right">
+                    <div class="mag-circulo-badge"></div>
+                    <button class="btn-delete-item mag-delete-btn" onclick="event.stopPropagation(); removerItem(this, 'magias')"><span class="material-icons">delete</span></button>
+                </div>
+            </div>`;
+                document.getElementById('lista-magias').insertAdjacentHTML('beforeend', html);
+                magicCardSendoEditado = document.getElementById('lista-magias').lastElementChild;
+            }
+
+            // Atualizar valores do card
+            Object.keys(dados).forEach(key => {
+                let input = magicCardSendoEditado.querySelector(`input[name="${key}"]`);
+                if (!input && key === 'ilustracao') {
+                    // Se a ficha for antiga e não tiver input de ilustração, cria agora
+                    input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'ilustracao';
+                    magicCardSendoEditado.appendChild(input);
+                }
+                if (input) input.value = dados[key];
+            });
+
+            // Atualizar UI visível
+            magicCardSendoEditado.querySelector('.mag-titulo-resumo').textContent = dados.nome || 'Feitiço Sem Nome';
+            magicCardSendoEditado.querySelector('.mag-subtitulo-resumo').textContent = dados.escola || '...';
+            magicCardSendoEditado.querySelector('.mag-circulo-badge').textContent = (dados.circulo || '0') + 'º';
+
+            renderizarIconesMagias();
+            document.body.removeChild(overlay);
+            magicCardSendoEditado = null;
+
+            salvarLista('magias'); // Dispara salvamento para o backend via a func ja existente
+        }
 
         function mudarFisico(selectObj) {
             // Se não houver valor salvo previamente no dataset do elemento HTML, inicializamos com o valor Jinja
@@ -1171,15 +1613,106 @@
             const diferencaPassos = passosNovos - passosAntigos;
 
             const pvMaxAtual = parseInt(document.getElementById('pv_max_input').value) || 0;
+            const novoPvMax = pvMaxAtual + diferencaPassos;
 
             const payload = {
                 fisico: valNovo,
-                pv_max: pvMaxAtual + diferencaPassos
+                pv_max: novoPvMax
             };
 
             salvarMultiplos(payload).then(() => {
-                location.reload();
+                selectObj.dataset.oldValue = valNovo;
+                document.getElementById('pv_max_input').value = novoPvMax;
+                // Atualiza o SVG do dado Físico na UI
+                atualizarSvgAtributo(selectObj.closest('.stat-box'), valNovo);
+                calcularPeso(); // Recalcula peso pois fisico mudou
+                mostrarToast('Físico atualizado!', 'success');
             });
+        }
+
+        // Atualiza SVG de dado sem reload de página
+        function atualizarSvgAtributo(statBox, novoValor) {
+            if (!statBox) return;
+            const svgEl = statBox.querySelector('.dice-svg');
+            const labelEl = statBox.querySelector('.dice-label');
+            if (labelEl) labelEl.textContent = novoValor;
+            if (!svgEl) return;
+            const formas = {
+                4: '<polygon points="50,10 90,85 10,85" />',
+                6: '<rect x="15" y="15" width="70" height="70" />',
+                8: '<polygon points="50,5 90,50 50,95 10,50" />',
+                10: '<polygon points="50,5 85,35 50,95 15,35" />',
+                12: '<polygon points="50,5 90,40 75,90 25,90 10,40" />',
+                20: '<polygon points="50,5 90,25 90,75 50,95 10,75 10,25" />'
+            };
+            svgEl.innerHTML = formas[novoValor] || '<circle cx="50" cy="50" r="40" />';
+        }
+
+        // Muda dado de atributo (não-Físico) sem reload
+        function mudarAtributo(selectObj, field) {
+            const valNovo = parseInt(selectObj.value);
+            salvar(field, valNovo).then(() => {
+                selectObj.dataset.oldValue = valNovo;
+                atualizarSvgAtributo(selectObj.closest('.stat-box'), valNovo);
+                mostrarToast(`${field} atualizado!`, 'success');
+            });
+        }
+
+        // Muda mini-dado de expertise ou incapacidade sem reload
+        function mudarMiniDado(selectObj, field, tipo) {
+            const valNovo = parseInt(selectObj.value);
+            salvar(field, valNovo).then(() => {
+                const miniContainer = selectObj.closest('.mini-dice-container');
+                if (!miniContainer) return;
+                const svgEl = miniContainer.querySelector('.dice-svg');
+                const labelEl = miniContainer.querySelector('.mini-dice-label');
+                const formas = {
+                    4: '<polygon points="50,10 90,85 10,85" />',
+                    6: '<rect x="15" y="15" width="70" height="70" />',
+                    8: '<polygon points="50,5 90,50 50,95 10,50" />',
+                    10: '<polygon points="50,5 85,35 50,95 15,35" />',
+                    12: '<polygon points="50,5 90,40 75,90 25,90 10,40" />'
+                };
+                if (svgEl) {
+                    svgEl.innerHTML = valNovo > 0 ? (formas[valNovo] || '') : '<circle cx="50" cy="50" r="40" />';
+                    svgEl.classList.toggle('empty-dice', valNovo === 0);
+                }
+                if (labelEl) labelEl.textContent = valNovo > 0 ? valNovo : '';
+            });
+        }
+
+        // Toast de notificação de save
+        function mostrarToast(msg, tipo = 'success') {
+            let toast = document.getElementById('giharad-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'giharad-toast';
+                toast.style.cssText = `
+                    position: fixed; bottom: 30px; left: 30px; z-index: 9999;
+                    padding: 12px 22px; border-radius: 8px; font-family: 'Cinzel', serif;
+                    font-size: 0.85rem; letter-spacing: 1px; pointer-events: none;
+                    transition: opacity 0.4s ease, transform 0.4s ease;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+                `;
+                document.body.appendChild(toast);
+            }
+            const cores = {
+                success: { bg: 'rgba(30,60,30,0.95)', border: '#4caf50', color: '#a5d6a7' },
+                info: { bg: 'rgba(20,40,70,0.95)', border: '#2196f3', color: '#90caf9' },
+                error: { bg: 'rgba(60,20,20,0.95)', border: '#f44336', color: '#ef9a9a' }
+            };
+            const c = cores[tipo] || cores.success;
+            toast.style.background = c.bg;
+            toast.style.border = `1px solid ${c.border}`;
+            toast.style.color = c.color;
+            toast.textContent = msg;
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateY(0)';
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+            }, 2500);
         }
 
         function openTab(evt, tabName) {
@@ -1211,7 +1744,60 @@
     </script>
     <script src="/static/js/active_char_ui.js"></script>
 
+    {% if not is_owner %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const main = document.querySelector('.character-main');
+            if (!main) return;
 
+            main.querySelectorAll('input, textarea, select').forEach(el => {
+                el.readOnly = true;
+                if (el.tagName === 'SELECT' || el.type === 'checkbox' || el.type === 'radio') {
+                    el.disabled = true;
+                }
+                el.style.pointerEvents = 'none';
+            });
+
+            main.querySelectorAll('.marcador-click, .avatar-upload-box, .dice-svg, .mini-dice-container, .dice-select-hidden').forEach(el => {
+                el.style.pointerEvents = 'none';
+                if (el.onclick) el.onclick = null;
+            });
+
+            main.querySelectorAll('.btn-add, .btn-delete-item').forEach(el => {
+                el.style.display = 'none';
+            });
+
+            const avatarUploadBox = main.querySelector('.avatar-upload-box');
+            if (avatarUploadBox) {
+                avatarUploadBox.querySelectorAll('span').forEach(span => {
+                    if (span.classList.contains('material-icons') || span.innerText.includes('Alterar')) {
+                        span.style.display = 'none';
+                    }
+                });
+            }
+        });
+    </script>
+    <style>
+        .character-main input,
+        .character-main textarea,
+        .character-main select,
+        .character-main .marcador-click,
+        .character-main .avatar-upload-box,
+        .character-main .dice-svg,
+        .character-main .mini-dice-container,
+        .character-main .dice-select-hidden {
+            pointer-events: none !important;
+        }
+
+        .character-main input:focus,
+        .character-main textarea:focus,
+        .character-main select:focus {
+            outline: none !important;
+        }
+    </style>
+    {% endif %}
+
+    </div>
 
 </body>
 
