@@ -1,8 +1,8 @@
-# 📜 Sistema de Fichas de RPG
+# Sistema de Fichas de RPG
 
 Um sistema de fichas digital minimalista e funcional, projetado para permitir a edição em tempo real e persistência de dados durante sessões de RPG.
 
-## 🛠️ Tecnologias Utilizadas
+## Tecnologias Utilizadas
 
 ### Frontend & Estética
 * ![HTML5](https://img.shields.io/badge/html5-%23E34F26.svg?style=for-the-badge&logo=html5&logoColor=white)
